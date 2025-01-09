@@ -39,7 +39,7 @@ def create_model(args, env):
 def load_model(args, env):
     if args.algo == 'ppo':
         model = PPO.load('./models/{}{}Timesteps{}Lr{}Epochs{}Bsize{}'
-                         .format(args.algo, args.env, args.total_timesteps, args.lr, args.num_epochs, args.batch_size))
+                         .format(args.algo, args.train_env, args.total_timesteps, args.lr, args.num_epochs, args.batch_size), env=env)
     else:
         raise ValueError(f"RL Algo not supported: {args.algo}")
     return model
@@ -102,7 +102,7 @@ def main():
         os.makedirs(dir, exist_ok=True)
 
     env = Monitor(env, dirs['log_dir'])
-    t_env = Monitor(env, dirs['test_log_dir'])
+    t_env = Monitor(t_env, dirs['test_log_dir'])
 
     print('State space:', env.observation_space)  # state-space
     print('Action space:', env.action_space)  # action-space
@@ -124,7 +124,7 @@ def main():
             mean_reward, std_reward, args.test_episodes))
     else:
 
-        model = load_model(args, env)
+        model = load_model(args, t_env)
         mean_reward, std_reward = evaluate_policy(
             model, t_env, n_eval_episodes=args.test_episodes, render=args.render_test)
         print("Test reward (avg +/- std): ({} +/- {}) - Num episodes: {}".format(
