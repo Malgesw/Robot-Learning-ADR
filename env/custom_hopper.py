@@ -10,16 +10,18 @@ from gym import utils
 from .mujoco_env import MujocoEnv
 from scipy.stats import truncnorm
 
+
 class CustomHopper(MujocoEnv, utils.EzPickle):
     def __init__(self, domain=None):
         MujocoEnv.__init__(self, 4)
         utils.EzPickle.__init__(self)
 
-        self.original_masses = np.copy(self.sim.model.body_mass[1:])    # Default link masses
+        self.original_masses = np.copy(
+            self.sim.model.body_mass[1:])    # Default link masses
 
-        if domain == 'source':  # Source environment has an imprecise torso mass (1kg shift)
+        # Source environment has an imprecise torso mass (1kg shift)
+        if domain == 'source':
             self.sim.model.body_mass[1] -= 1.0
-
 
     def set_random_parameters(self):
         """Set random masses
@@ -31,11 +33,14 @@ class CustomHopper(MujocoEnv, utils.EzPickle):
         """Sample masses according to a domain randomization distribution
         TODO
         """
-        return
+        lower_bound = self.get_parameters()*0.5
+        upper_bound = self.get_parameters()*1.5
+        # sample body_mass.shape - 1 values for the movable masses
+        return np.random.uniform(lower_bound, upper_bound, size=self.get_parameters().shape)
 
     def get_parameters(self):
         """Get value of mass for each link"""
-        masses = np.array( self.sim.model.body_mass[1:] )
+        masses = np.array(self.sim.model.body_mass[1:])
         return masses
 
     def set_parameters(self, task):
@@ -58,7 +63,8 @@ class CustomHopper(MujocoEnv, utils.EzPickle):
         reward += alive_bonus
         reward -= 1e-3 * np.square(a).sum()
         s = self.state_vector()
-        done = not (np.isfinite(s).all() and (np.abs(s[2:]) < 100).all() and (height > .7) and (abs(ang) < .2))
+        done = not (np.isfinite(s).all() and (
+            np.abs(s[2:]) < 100).all() and (height > .7) and (abs(ang) < .2))
         ob = self._get_obs()
 
         return ob, reward, done, {}
@@ -72,8 +78,10 @@ class CustomHopper(MujocoEnv, utils.EzPickle):
 
     def reset_model(self):
         """Reset the environment to a random initial state"""
-        qpos = self.init_qpos + self.np_random.uniform(low=-.005, high=.005, size=self.model.nq)
-        qvel = self.init_qvel + self.np_random.uniform(low=-.005, high=.005, size=self.model.nv)
+        qpos = self.init_qpos + \
+            self.np_random.uniform(low=-.005, high=.005, size=self.model.nq)
+        qvel = self.init_qvel + \
+            self.np_random.uniform(low=-.005, high=.005, size=self.model.nv)
         self.set_state(qpos, qvel)
         return self._get_obs()
 
@@ -84,27 +92,25 @@ class CustomHopper(MujocoEnv, utils.EzPickle):
         self.viewer.cam.elevation = -20
 
 
-
 """
     Registered environments
 """
 gym.envs.register(
-        id="CustomHopper-v0",
-        entry_point="%s:CustomHopper" % __name__,
-        max_episode_steps=500,
+    id="CustomHopper-v0",
+    entry_point="%s:CustomHopper" % __name__,
+    max_episode_steps=500,
 )
 
 gym.envs.register(
-        id="CustomHopper-source-v0",
-        entry_point="%s:CustomHopper" % __name__,
-        max_episode_steps=500,
-        kwargs={"domain": "source"}
+    id="CustomHopper-source-v0",
+    entry_point="%s:CustomHopper" % __name__,
+    max_episode_steps=500,
+    kwargs={"domain": "source"}
 )
 
 gym.envs.register(
-        id="CustomHopper-target-v0",
-        entry_point="%s:CustomHopper" % __name__,
-        max_episode_steps=500,
-        kwargs={"domain": "target"}
+    id="CustomHopper-target-v0",
+    entry_point="%s:CustomHopper" % __name__,
+    max_episode_steps=500,
+    kwargs={"domain": "target"}
 )
-
