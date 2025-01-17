@@ -27,16 +27,17 @@ class CustomHopper(MujocoEnv, utils.EzPickle):
         """Set random masses
         TODO
         """
-        self.set_parameters(*self.sample_parameters())
+        # print(self.sample_parameters())
+        self.set_parameters(self.sample_parameters())
 
     def sample_parameters(self):
         """Sample masses according to a domain randomization distribution
         TODO
         """
-        lower_bound = self.get_parameters()*0.5
-        upper_bound = self.get_parameters()*1.5
+        lower_bound = self.original_masses[1:]*0.4
+        upper_bound = self.original_masses[1:]*1.2
         # sample body_mass.shape - 1 values for the movable masses
-        return np.random.uniform(lower_bound, upper_bound, size=self.get_parameters().shape)
+        return np.random.uniform(lower_bound, upper_bound)
 
     def get_parameters(self):
         """Get value of mass for each link"""
@@ -45,7 +46,7 @@ class CustomHopper(MujocoEnv, utils.EzPickle):
 
     def set_parameters(self, task):
         """Set each hopper link's mass to a new value"""
-        self.sim.model.body_mass[1:] = task
+        self.sim.model.body_mass[2:] = task
 
     def step(self, a):
         """Step the simulation to the next timestep
@@ -78,11 +79,13 @@ class CustomHopper(MujocoEnv, utils.EzPickle):
 
     def reset_model(self):
         """Reset the environment to a random initial state"""
+        self.set_random_parameters()
         qpos = self.init_qpos + \
             self.np_random.uniform(low=-.005, high=.005, size=self.model.nq)
         qvel = self.init_qvel + \
             self.np_random.uniform(low=-.005, high=.005, size=self.model.nv)
         self.set_state(qpos, qvel)
+        # self.set_random_parameters()
         return self._get_obs()
 
     def viewer_setup(self):

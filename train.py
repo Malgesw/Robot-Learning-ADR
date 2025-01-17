@@ -19,7 +19,7 @@ import numpy as np
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 dirs = {'log_dir': './logs', 'models_dir': './models',
-        'images_dir': './images', 'test_log_dir': './test_logs'}
+        'images_dir': './images', 'test_log_dir': './test_logs', 'udr_log_dir': './udr_logs', 'udr_test_log_dir': './udr_test_logs'}
 
 
 def set_seed(seed):
@@ -38,8 +38,10 @@ def create_model(args, env):
 
 def load_model(args, env):
     if args.algo == 'ppo':
-        model = PPO.load('./models/{}{}Timesteps{}Lr{}Epochs{}Bsize{}'
-                         .format(args.algo, args.train_env, args.total_timesteps, args.lr, args.num_epochs, args.batch_size), env=env)
+        model = PPO.load('./models/{}{}Timesteps{}Lr{}Epochs{}Bsize{}UDR{}ADR{}'
+                         .format(args.algo, args.train_env, args.total_timesteps, args.lr, args.num_epochs, args.batch_size, args.udr, args.adr), env=env)
+        print('./models/{}{}Timesteps{}Lr{}Epochs{}Bsize{}UDR{}ADR{}'.format(
+            args.algo, args.train_env, args.total_timesteps, args.lr, args.num_epochs, args.batch_size, args.udr, args.adr))
     else:
         raise ValueError(f"RL Algo not supported: {args.algo}")
     return model
@@ -61,8 +63,8 @@ def plot_results(log_folder, args, title="Learning Curve"):
     plt.xlabel("Number of Timesteps")
     plt.ylabel("Rewards")
     plt.title(title + " Smoothed ({})".format(args.algo))
-    plt.savefig('./images/trainingResults{}{}Timesteps{}Lr{}Epochs{}Bsize{}.png'
-                .format(args.algo, args.train_env, args.total_timesteps, args.lr, args.num_epochs, args.batch_size))
+    plt.savefig('./images/trainingResults{}{}Timesteps{}Lr{}Epochs{}Bsize{}UDR{}ADR{}.png'
+                .format(args.algo, args.train_env, args.total_timesteps, args.lr, args.num_epochs, args.batch_size, args.udr, args.adr))
     plt.show()
 
 
@@ -92,6 +94,10 @@ def main():
                         type=int, help='Training epochs')
     parser.add_argument('--test_episodes', default=100,
                         type=int, help='# episodes for test evaluations')
+    parser.add_argument("--udr", action='store_true',
+                        help="Use Uniform Domain Randomization")
+    parser.add_argument("--adr", action='store_true',
+                        help="Use Automatic Domain Randomization")
     args = parser.parse_args()
 
     set_seed(args.seed)
@@ -101,8 +107,12 @@ def main():
     for dir in dirs.values():
         os.makedirs(dir, exist_ok=True)
 
-    env = Monitor(env, dirs['log_dir'])
-    t_env = Monitor(t_env, dirs['test_log_dir'])
+    if args.udr:
+        env = Monitor(env, dirs['udr_log_dir'])
+        t_env = Monitor(t_env, dirs['udr_test_log_dir'])
+    else:
+        env = Monitor(env, dirs['log_dir'])
+        t_env = Monitor(t_env, dirs['test_log_dir'])
 
     print('State space:', env.observation_space)  # state-space
     print('Action space:', env.action_space)  # action-space
@@ -113,10 +123,13 @@ def main():
 
         model = create_model(args, env)
         model.learn(total_timesteps=args.total_timesteps)
-        model.save('./models/{}{}Timesteps{}Lr{}Epochs{}Bsize{}'
-                   .format(args.algo, args.train_env, args.total_timesteps, args.lr, args.num_epochs, args.batch_size))
+        model.save('./models/{}{}Timesteps{}Lr{}Epochs{}Bsize{}UDR{}ADR{}'
+                   .format(args.algo, args.train_env, args.total_timesteps, args.lr, args.num_epochs, args.batch_size, args.udr, args.adr))
 
-        plot_results(dirs['log_dir'], args)
+        if args.udr:
+            plot_results(dirs['udr_log_dir'], args)
+        else:
+            plot_results(dirs['log_dir'], args)
 
         mean_reward, std_reward = evaluate_policy(
             model, t_env, n_eval_episodes=args.test_episodes, render=args.render_test)

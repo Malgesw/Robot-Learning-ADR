@@ -12,7 +12,8 @@ import gym
 try:
     import mujoco_py
 except ImportError as e:
-    raise error.DependencyNotInstalled("You need to install mujoco_py (https://mujoco.org/)")
+    raise error.DependencyNotInstalled(
+        "You need to install mujoco_py (https://mujoco.org/)")
 
 DEFAULT_SIZE = 500
 
@@ -62,7 +63,8 @@ class MujocoEnv(gym.Env):
         self.seed()
 
     def build_model(self):
-        self.model = mujoco_py.load_model_from_path(os.path.join(os.path.dirname(__file__), "assets/hopper.xml"))
+        self.model = mujoco_py.load_model_from_path(
+            os.path.join(os.path.dirname(__file__), "assets/hopper.xml"))
         self.sim = mujoco_py.MjSim(self.model)
         self.viewer = None
         self._viewers = {}
@@ -107,7 +109,8 @@ class MujocoEnv(gym.Env):
         return ob
 
     def set_state(self, qpos, qvel):
-        assert qpos.shape == (self.model.nq,) and qvel.shape == (self.model.nv,)
+        assert qpos.shape == (
+            self.model.nq,) and qvel.shape == (self.model.nv,)
         old_state = self.sim.get_state()
         new_state = mujoco_py.MjSimState(old_state.time, qpos, qvel,
                                          old_state.act, old_state.udd_state)
@@ -145,14 +148,16 @@ class MujocoEnv(gym.Env):
 
         if mode == 'rgb_array':
             # window size used for old mujoco-py:
-            data = self._get_viewer(mode).read_pixels(width, height, depth=False)
+            data = self._get_viewer(mode).read_pixels(
+                width, height, depth=False)
             # original image is upside-down, so flip it
             return data[::-1, :, :]
         elif mode == 'depth_array':
             self._get_viewer(mode).render(width, height)
             # window size used for old mujoco-py:
             # Extract depth part of the read_pixels() tuple
-            data = self._get_viewer(mode).read_pixels(width, height, depth=True)[1]
+            data = self._get_viewer(mode).read_pixels(
+                width, height, depth=True)[1]
             # original image is upside-down, so flip it
             return data[::-1, :]
         elif mode == 'human':
