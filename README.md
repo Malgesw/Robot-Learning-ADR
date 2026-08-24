@@ -44,7 +44,7 @@ On the plain Hopper, UDR beats ADR: the task is simple enough that ADR's more ag
 
 Once the task gets harder (moving obstacle), that ranking flips: ADR reaches the highest reward and, more importantly, stays strong even when the UDR range is deliberately mis-configured (narrowed to `[0.8λ, 1.1λ]`), while UDR's performance drops with it.
 
-ADR's adaptive bounds absorb a bad hyperparameter choice that a fixed-range method cannot. This matches the difficulty-dependent behavior reported in the original ADR paper.
+The two experiments together point to a practical takeaway: a well-chosen fixed range (UDR) is hard to beat on a task simple enough to tune by hand, but ADR's self-adjusting range becomes the safer bet as the task gets harder, where fixed, poorly chosen ranges can significantly affect test performance.
 
 Full result tables (including source-to-source and target-to-target controls, and the fixed-obstacle variant) and the ADR-entropy curves that show the curriculum adapting during training are in the [report](docs/report.pdf).
 
