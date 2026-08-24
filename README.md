@@ -63,6 +63,7 @@ Full result tables (including source-to-source and target-to-target controls, an
 │   │   └── assets/                MJCF model XMLs
 │   ├── train.py                PPO training entry point (baseline / UDR / ADR)
 │   └── demo.py                 random-policy rollout, environment smoke test
+├── checkpoints/                 final trained policy for every experiment in the results tables
 ├── notebooks/colab_template.ipynb   standalone Colab setup for GPU training
 ├── results/
 │   ├── figures/                training curves and the ADR algorithm diagram
@@ -71,7 +72,7 @@ Full result tables (including source-to-source and target-to-target controls, an
 └── requirements.txt
 ```
 
-Training artifacts (logs, checkpoints, trained models, generated plots) are written to a gitignored `outputs/` directory rather than tracked in the repo.
+Per-run training artifacts (periodic checkpoints, logs, generated plots from re-running `train.py`) are written to a gitignored `outputs/` directory rather than tracked in the repo. `checkpoints/` is the exception: it ships the one final policy from each completed experiment, as evidence the results above came from real training runs and not just the report.
 
 ## Setup
 
@@ -110,8 +111,30 @@ python -m hopper_adr.train --test --train_env CustomHopper-source-v0 \
     --test_env CustomHopper-target-v0 --total_timesteps 1000000 --udr
 ```
 
-See `python -m hopper_adr.train --help` for the full set of training hyperparameters (learning rate, batch size, PPO epochs, ADR performance
-thresholds, seed).
+See `python -m hopper_adr.train --help` for the full set of training hyperparameters (learning rate, batch size, PPO epochs, ADR performance thresholds, seed).
+
+## Pretrained checkpoints
+
+`checkpoints/` contains the final PPO policy from every experiment in the [results](#results) tables, using `train.py`'s own naming convention (`ppo<env><timesteps>Lr<lr>Epochs<n>Bsize<n>UDR<bool>ADR<bool>`) so each file's training env and DR setting are readable from its name. Only the moving-obstacle runs also ship their `VecNormalize` statistics (`vecNormalize...pkl`); the plain-Hopper checkpoints are final weights only and would need retraining to reproduce the exact observation normalization used at test time.
+
+Load the ADR checkpoint that produced the GIF above and roll it out:
+
+```python
+import gym
+from stable_baselines3 import PPO
+from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
+from hopper_adr.envs.custom_hopper_obs import CustomHopperWithObstacles  # registers the env id
+
+env = DummyVecEnv([lambda: gym.make("CustomHopperWithObstacles-source-v0")])
+env = VecNormalize.load("checkpoints/vecNormalizeCustomHopperWithObstacles-source-v0UDRFalseADRTrue.pkl", env)
+env.training, env.norm_reward = False, False
+
+model = PPO.load("checkpoints/ppoCustomHopperWithObstacles-source-v0Timesteps1000000Lr0.0003Epochs10Bsize64UDRFalseADRTrue", env=env)
+obs = env.reset()
+for _ in range(1000):
+    action, _ = model.predict(obs, deterministic=True)
+    obs, reward, done, info = env.step(action)
+```
 
 ## Author
 
