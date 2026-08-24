@@ -106,7 +106,8 @@ python -m hopper_adr.train --train_env CustomHopper-source-v0 \
 python -m hopper_adr.train --train_env CustomHopperWithObstacles-source-v0 \
     --test_env CustomHopperWithObstacles-target-v0 --total_timesteps 1000000 --adr
 
-# Evaluate a trained model (loads the matching checkpoint from outputs/)
+# Evaluate a model you trained yourself with the commands above (reads outputs/models/,
+# not the repo's shipped checkpoints/ — see "Pretrained checkpoints" below for those)
 python -m hopper_adr.train --test --train_env CustomHopper-source-v0 \
     --test_env CustomHopper-target-v0 --total_timesteps 1000000 --udr
 ```
@@ -115,7 +116,7 @@ See `python -m hopper_adr.train --help` for the full set of training hyperparame
 
 ## Pretrained checkpoints
 
-`checkpoints/` contains the final PPO policy from every experiment in the [results](#results) tables, using `train.py`'s own naming convention (`ppo<env><timesteps>Lr<lr>Epochs<n>Bsize<n>UDR<bool>ADR<bool>`) so each file's training env and DR setting are readable from its name. Only the moving-obstacle runs also ship their `VecNormalize` statistics (`vecNormalize...pkl`).
+`checkpoints/` contains the final PPO policy from every experiment in the [results](#results) tables, using `train.py`'s own naming convention (`ppo<env><timesteps>Lr<lr>Epochs<n>Bsize<n>UDR<bool>ADR<bool>`) so each file's training env and DR setting are readable from its name. Only the moving-obstacle runs also ship their `VecNormalize` statistics (`vecNormalize...pkl`), so the snippet below loads one of those; it's from the same ADR + moving-obstacle setup as the GIF above, not confirmed to be that exact run.
 
 ```python
 import gym
