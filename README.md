@@ -1,5 +1,13 @@
 # Automatic Domain Randomization for Sim-to-Sim Policy Transfer
 
+<p>
+  <img alt="Python" src="https://img.shields.io/badge/python-3.7-blue">
+  <img alt="MuJoCo" src="https://img.shields.io/badge/MuJoCo-mujoco--py-orange">
+  <img alt="Gym" src="https://img.shields.io/badge/OpenAI%20Gym-0.21-black">
+  <img alt="Stable-Baselines3" src="https://img.shields.io/badge/Stable--Baselines3-1.7-blue">
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
+</p>
+
 Domain randomization for a PPO policy on the MuJoCo Hopper, comparing a fixed **Uniform Domain Randomization (UDR)** range against **Automatic Domain Randomization (ADR)**, the self-adjusting curriculum from OpenAI's [*Solving Rubik's Cube with a Robot Hand*](https://arxiv.org/abs/1910.07113), on policy transfer from a source to a shifted target environment. The project extends the base Hopper with a moving-obstacle variant to test both methods under a harder task.
 
 ## Background
