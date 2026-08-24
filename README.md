@@ -116,7 +116,7 @@ See `python -m hopper_adr.train --help` for the full set of training hyperparame
 
 ## Pretrained checkpoints
 
-`checkpoints/` contains the final PPO policy from every experiment in the [results](#results) tables, using `train.py`'s own naming convention (`ppo<env><timesteps>Lr<lr>Epochs<n>Bsize<n>UDR<bool>ADR<bool>`) so each file's training env and DR setting are readable from its name. Only the moving-obstacle runs also ship their `VecNormalize` statistics (`vecNormalize...pkl`), so the snippet below loads one of those; it's from the same ADR + moving-obstacle setup as the GIF above, not confirmed to be that exact run.
+`checkpoints/` contains the final PPO policy from every experiment in the [results](#results) tables, using `train.py`'s own naming convention (`ppo<env><timesteps>Lr<lr>Epochs<n>Bsize<n>UDR<bool>ADR<bool>`) so each file's training env and DR setting are readable from its name. Only the moving-obstacle runs also ship their `VecNormalize` statistics (`vecNormalize...pkl`), so the snippet below loads one of those; it's from the same ADR + moving-obstacle setup as the GIF above.
 
 ```python
 import gym
