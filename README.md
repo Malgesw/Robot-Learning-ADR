@@ -117,7 +117,7 @@ See `python -m hopper_adr.train --help` for the full set of training hyperparame
 
 `checkpoints/` contains the final PPO policy from every experiment in the [results](#results) tables, using `train.py`'s own naming convention (`ppo<env><timesteps>Lr<lr>Epochs<n>Bsize<n>UDR<bool>ADR<bool>`) so each file's training env and DR setting are readable from its name. Only the moving-obstacle runs also ship their `VecNormalize` statistics (`vecNormalize...pkl`); the plain-Hopper checkpoints are final weights only and would need retraining to reproduce the exact observation normalization used at test time.
 
-Load the ADR checkpoint that produced the GIF above and roll it out:
+Load the ADR + moving-obstacle checkpoint and roll it out (the same setup used for the GIF above, though it predates this reorganization by over a year, so this specific file isn't guaranteed to be the exact run that generated it):
 
 ```python
 import gym
