@@ -1,20 +1,12 @@
 # Automatic Domain Randomization for Sim-to-Sim Policy Transfer
 
-Domain randomization for a PPO policy on the MuJoCo Hopper, comparing a fixed
-**Uniform Domain Randomization (UDR)** range against **Automatic Domain
-Randomization (ADR)** — the self-adjusting curriculum from OpenAI's
-[*Solving Rubik's Cube with a Robot Hand*](https://arxiv.org/abs/1910.07113) —
-on policy transfer from a source to a shifted target environment. The project
-extends the base Hopper with a moving-obstacle variant to test both methods
-under a harder task.
+Domain randomization for a PPO policy on the MuJoCo Hopper, comparing a fixed **Uniform Domain Randomization (UDR)** range against **Automatic Domain Randomization (ADR)** — the self-adjusting curriculum from OpenAI's [*Solving Rubik's Cube with a Robot Hand*](https://arxiv.org/abs/1910.07113) — on policy transfer from a source to a shifted target environment. The project extends the base Hopper with a moving-obstacle variant to test both methods under a harder task.
 
 ![ADR policy jumping a moving obstacle](results/adr_moving_obstacle.gif)
 
 ## Results
 
-All numbers are mean episode reward ± std over held-out test episodes,
-policy trained on the source dynamics and evaluated on the shifted target
-dynamics (full tables and setup in [`docs/report.pdf`](docs/report.pdf)).
+All numbers are mean episode reward ± std over held-out test episodes, policy trained on the source dynamics and evaluated on the shifted target dynamics (full tables and setup in [`docs/report.pdf`](docs/report.pdf)).
 
 **Plain Hopper**
 
@@ -34,19 +26,9 @@ dynamics (full tables and setup in [`docs/report.pdf`](docs/report.pdf)).
 | PPO + UDR | `[0.8λ, 1.1λ]` (deliberately mis-set, narrow) | 670.09 ± 120.98 |
 | PPO + ADR | `[0.8λ, 1.1λ]`, thresholds (900, 300) | **977.10 ± 72.31** |
 
-**The finding that matters more than either number on its own**: on the plain
-Hopper, UDR beats ADR — the task is simple enough that ADR's more aggressive,
-self-widening curriculum spends effort exploring dynamics variations the
-target environment never needed. Once the task gets harder (moving obstacle),
-that ranking flips: ADR reaches the highest reward, and — more importantly —
-stays strong even when the UDR range is deliberately mis-configured (narrowed
-to `[0.8λ, 1.1λ]`), while UDR's performance drops with it. ADR's adaptive
-bounds absorb a bad hyperparameter choice that a fixed-range method cannot.
-This matches the difficulty-dependent behavior reported in the original ADR
-paper. Full result tables (including source→source and target→target
-controls, and the fixed-obstacle variant) and the ADR-entropy curves that
-show the curriculum adapting during training are in the
-[report](docs/report.pdf).
+**The finding that matters more than either number on its own**: on the plain Hopper, UDR beats ADR — the task is simple enough that ADR's more aggressive, self-widening curriculum spends effort exploring dynamics variations the target environment never needed. Once the task gets harder (moving obstacle), that ranking flips: ADR reaches the highest reward, and — more importantly — stays strong even when the UDR range is deliberately mis-configured (narrowed
+to `[0.8λ, 1.1λ]`), while UDR's performance drops with it. ADR's adaptive bounds absorb a bad hyperparameter choice that a fixed-range method cannot. This matches the difficulty-dependent behavior reported in the original ADR
+paper. Full result tables (including source→source and target→target controls, and the fixed-obstacle variant) and the ADR-entropy curves that show the curriculum adapting during training are in the [report](docs/report.pdf).
 
 ## Project structure
 
@@ -67,13 +49,11 @@ show the curriculum adapting during training are in the
 └── requirements.txt
 ```
 
-Training artifacts (logs, checkpoints, trained models, generated plots) are
-written to a gitignored `outputs/` directory rather than tracked in the repo.
+Training artifacts (logs, checkpoints, trained models, generated plots) are written to a gitignored `outputs/` directory rather than tracked in the repo.
 
 ## Setup
 
-Tested on Linux with Python 3.7; `mujoco-py` is not well supported on
-Windows, so use WSL2 or a Linux VM there.
+Tested on Linux with Python 3.7; `mujoco-py` is not well supported on Windows, so use WSL2 or a Linux VM there.
 
 ```bash
 # 1. Install MuJoCo and mujoco-py: https://github.com/openai/mujoco-py
@@ -108,23 +88,15 @@ python -m hopper_adr.train --test --train_env CustomHopper-source-v0 \
     --test_env CustomHopper-target-v0 --total_timesteps 1000000 --udr
 ```
 
-See `python -m hopper_adr.train --help` for the full set of training
-hyperparameters (learning rate, batch size, PPO epochs, ADR performance
+See `python -m hopper_adr.train --help` for the full set of training hyperparameters (learning rate, batch size, PPO epochs, ADR performance
 thresholds, seed).
 
 ## Background
 
-Domain randomization narrows the sim-to-real gap by sampling environment
-dynamics from a distribution during training rather than fixing them, so the
-policy generalizes to the shifted parameters it meets at test time. UDR fixes
-that distribution's bounds up front; ADR instead expands or shrinks each
-parameter's range automatically based on the policy's rolling performance at
-the current boundary — widening where the policy already succeeds, shrinking
-where it doesn't — removing the need to hand-tune the randomization range.
+Domain randomization narrows the sim-to-real gap by sampling environment dynamics from a distribution during training rather than fixing them, so the policy generalizes to the shifted parameters it meets at test time. UDR fixes that distribution's bounds up front; ADR instead expands or shrinks each parameter's range automatically based on the policy's rolling performance at the current boundary — widening where the policy already succeeds, shrinking where it doesn't — removing the need to hand-tune the randomization range.
 
 <img src="results/figures/adr_algorithm.png" width="420" alt="ADR algorithm">
 
 ## Author
 
-Niccolò Malgeri — course project for Robot Learning (01HFNOV), Politecnico
-di Torino.
+Niccolò Malgeri — course project for Robot Learning (01HFNOV), Politecnico di Torino.
