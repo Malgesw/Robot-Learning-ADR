@@ -11,7 +11,7 @@ from scipy.stats import truncnorm
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import BaseCallback
 
-from env.custom_hopper import CustomHopper
+from .custom_hopper import CustomHopper
 
 import matplotlib.pyplot as plt
 

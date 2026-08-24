@@ -1,11 +1,10 @@
-"""Sample script for training a control policy on the Hopper environment
-
-    Read the stable-baselines3 documentation and implement a training
-    pipeline with an RL algorithm of your choice between TRPO, PPO, and SAC.
+"""Train a PPO policy on the Hopper environment, optionally with Uniform
+or Automatic Domain Randomization (UDR / ADR), and evaluate transfer from
+the source to the target dynamics.
 """
 import gym
-from env.custom_hopper import *
-from env.custom_hopper_obs import CustomHopperWithObstacles, ADRCallbackObs, RandomizeObstaclesCallback
+from hopper_adr.envs.custom_hopper import *
+from hopper_adr.envs.custom_hopper_obs import CustomHopperWithObstacles, ADRCallbackObs, RandomizeObstaclesCallback
 
 from stable_baselines3 import PPO
 from stable_baselines3.common.evaluation import evaluate_policy
@@ -17,18 +16,27 @@ from stable_baselines3.common.env_checker import check_env
 
 import os
 import argparse
+from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-dirs = {'log_dir': './logs', 'models_dir': './models',
-        'images_dir': './images', 'test_log_dir': './test_logs',
-        'log_dir_obs': './logs_obs', 'test_log_dir_obs': './test_logs_obs',
-        'udr_log_dir': './udr_logs', 'udr_test_log_dir': './udr_test_logs',
-        'udr_log_dir_obs': './udr_logs_obs/', 'udr_test_log_dir_obs': './udr_test_logs_obs',
-        'adr_log_dir': './adr_logs', 'adr_test_log_dir': './adr_test_logs',
-        'adr_log_dir_obs': './adr_logs_obs/', 'adr_test_log_dir_obs': './adr_test_logs_obs'}
+# All training artifacts (logs, checkpoints, models, plots) are written
+# under a single gitignored directory at the repo root, instead of being
+# scattered across many top-level folders.
+OUTPUT_ROOT = Path(__file__).resolve().parents[2] / "outputs"
+
+dirs = {'log_dir': str(OUTPUT_ROOT / 'logs'), 'models_dir': str(OUTPUT_ROOT / 'models'),
+        'images_dir': str(OUTPUT_ROOT / 'images'), 'test_log_dir': str(OUTPUT_ROOT / 'test_logs'),
+        'log_dir_obs': str(OUTPUT_ROOT / 'logs_obs'), 'test_log_dir_obs': str(OUTPUT_ROOT / 'test_logs_obs'),
+        'udr_log_dir': str(OUTPUT_ROOT / 'udr_logs'), 'udr_test_log_dir': str(OUTPUT_ROOT / 'udr_test_logs'),
+        'udr_log_dir_obs': str(OUTPUT_ROOT / 'udr_logs_obs'), 'udr_test_log_dir_obs': str(OUTPUT_ROOT / 'udr_test_logs_obs'),
+        'adr_log_dir': str(OUTPUT_ROOT / 'adr_logs'), 'adr_test_log_dir': str(OUTPUT_ROOT / 'adr_test_logs'),
+        'adr_log_dir_obs': str(OUTPUT_ROOT / 'adr_logs_obs'), 'adr_test_log_dir_obs': str(OUTPUT_ROOT / 'adr_test_logs_obs')}
+MODELS_DIR = OUTPUT_ROOT / 'models'
+CHECKPOINTS_DIR = OUTPUT_ROOT / 'model_checkpoints'
+IMAGES_DIR = OUTPUT_ROOT / 'images'
 
 
 def set_seed(seed):
@@ -48,15 +56,15 @@ def create_model(args, env):
 def load_model(args, env):
 
     env = VecNormalize.load(
-        './models/vecNormalize{}UDR{}ADR{}.pkl'.format(args.train_env, args.udr, args.adr), env)
+        str(MODELS_DIR / 'vecNormalize{}UDR{}ADR{}.pkl'.format(args.train_env, args.udr, args.adr)), env)
     env.training = False
     env.norm_reward = False
 
     if args.algo == 'ppo':
-        model = PPO.load('./models/{}{}Timesteps{}Lr{}Epochs{}Bsize{}UDR{}ADR{}'
-                         .format(args.algo, args.train_env, args.total_timesteps, args.lr, args.num_epochs, args.batch_size, args.udr, args.adr), env=env)
-        print('./models/{}{}Timesteps{}Lr{}Epochs{}Bsize{}UDR{}ADR{}'.format(
-            args.algo, args.train_env, args.total_timesteps, args.lr, args.num_epochs, args.batch_size, args.udr, args.adr))
+        model_path = str(MODELS_DIR / '{}{}Timesteps{}Lr{}Epochs{}Bsize{}UDR{}ADR{}'
+                         .format(args.algo, args.train_env, args.total_timesteps, args.lr, args.num_epochs, args.batch_size, args.udr, args.adr))
+        model = PPO.load(model_path, env=env)
+        print(model_path)
     else:
         raise ValueError(f"RL Algo not supported: {args.algo}")
     return model, env
@@ -78,8 +86,8 @@ def plot_results(log_folder, args, title="Learning Curve"):
     plt.xlabel("Number of Timesteps")
     plt.ylabel("Rewards")
     plt.title(title + " Smoothed ({})".format(args.algo))
-    plt.savefig('./images/trainingResults{}{}Timesteps{}Lr{}Epochs{}Bsize{}UDR{}ADR{}.png'
-                .format(args.algo, args.train_env, args.total_timesteps, args.lr, args.num_epochs, args.batch_size, args.udr, args.adr))
+    plt.savefig(str(IMAGES_DIR / 'trainingResults{}{}Timesteps{}Lr{}Epochs{}Bsize{}UDR{}ADR{}.png'
+                .format(args.algo, args.train_env, args.total_timesteps, args.lr, args.num_epochs, args.batch_size, args.udr, args.adr)))
     plt.show()
 
 
@@ -162,7 +170,7 @@ def main():
 
         model = create_model(args, env)
         checkpoint_callback = CheckpointCallback(
-            save_freq=200000, save_path='./model_checkpoints/')
+            save_freq=200000, save_path=str(CHECKPOINTS_DIR))
         if not args.adr:
             model.learn(total_timesteps=args.total_timesteps,
                         callback=checkpoint_callback)
@@ -170,9 +178,9 @@ def main():
             model.learn(total_timesteps=args.total_timesteps,
                         callback=[callback, checkpoint_callback])
         env.save(
-            './models/vecNormalize{}UDR{}ADR{}.pkl'.format(args.train_env, args.udr, args.adr))
-        model.save('./models/{}{}Timesteps{}Lr{}Epochs{}Bsize{}UDR{}ADR{}'
-                   .format(args.algo, args.train_env, args.total_timesteps, args.lr, args.num_epochs, args.batch_size, args.udr, args.adr))
+            str(MODELS_DIR / 'vecNormalize{}UDR{}ADR{}.pkl'.format(args.train_env, args.udr, args.adr)))
+        model.save(str(MODELS_DIR / '{}{}Timesteps{}Lr{}Epochs{}Bsize{}UDR{}ADR{}'
+                   .format(args.algo, args.train_env, args.total_timesteps, args.lr, args.num_epochs, args.batch_size, args.udr, args.adr)))
 
         if args.udr:
             plot_results(dirs['udr_log_dir{}'.format(obs_string)], args)
@@ -189,7 +197,7 @@ def main():
 
         model, t_env = load_model(args, t_env)
         model = PPO.load(
-            './model_checkpoints/rl_model_600000_steps.zip', env=t_env)
+            str(CHECKPOINTS_DIR / 'rl_model_600000_steps.zip'), env=t_env)
         if "Obstacles" in args.test_env:
             # test_callback = RandomizeObstaclesCallback(t_env)
             test_callback = None

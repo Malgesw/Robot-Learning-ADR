@@ -1,15 +1,10 @@
-"""Test a random policy on the Gym Hopper environment
+"""Roll out a random policy on the Gym Hopper environment.
 
-    Play around with this code to get familiar with the
-    Hopper environment.
-
-    For example, what happens if you don't reset the environment
-    even after the episode is over?
-    When exactly is the episode over?
-    What is an action here?
+Useful as a smoke test that the environment and its MuJoCo assets are
+installed and registered correctly before running actual training.
 """
 import gym
-from env.custom_hopper import *
+from hopper_adr.envs.custom_hopper import *
 
 
 def main():
